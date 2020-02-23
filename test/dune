@@ -1,0 +1,5 @@
+(test
+ (name test_assert)
+ (libraries ounit2)
+ (preprocess (pps ppx_test_match))
+)
