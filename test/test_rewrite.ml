@@ -18,7 +18,7 @@ let no_file_pos pos_bol pos_cnum =
 let one_line_loc s e =
   location ~start:(no_file_pos 0 s) ~end_:(no_file_pos 0 e) ~ghost:false
 
-(* Printer for error reporting.  *)
+(* Printers for error reporting.  *)
 let pat_printer p =
   let f = Format.str_formatter in
   Pprintast.pattern f p;
@@ -42,6 +42,12 @@ let loc_printer = function
   | { loc_start = ls; loc_end = le; loc_ghost = lg } ->
       "[" ^ (pos_printer ls) ^ " " ^ (pos_printer le) ^ " " ^ (string_of_bool lg) ^ "]"
 
+(* Ensure that a simple 2-tuple pattern that checks for equality gets correctly
+   as two different variables with a correct synthetic guard.  In this case, we
+   want `(x, x)` to be rewritten as follows:
+
+     (x, _syn_0x) when x = _syn_0x
+ *)
 let test_basic_tuple_eq_rewrite _ =
   let text_pat = "(x, x)" in
   let pat = Parse.pattern (Lexing.from_string text_pat) in
