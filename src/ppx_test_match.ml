@@ -52,7 +52,12 @@ let rewrite_guard g rename_table =
      them all with `&&`.
    *)
   let grouped = Hashtbl.to_seq rename_table in
-  let gs_by_var = Seq.map (fun (_, (_, vs)) -> vs) grouped
+  (* The reverse here is a bit wasteful but it means the variables in the guards
+     will be ordered according to their creation, and the first variable
+     occurring in the guards will be the "original" variable name.  Seems like
+     that may end up being less confusing/misleading in the future.
+   *)
+  let gs_by_var = Seq.map (fun (_, (_, vs)) -> List.rev vs) grouped
                   |> Seq.map coupler
                   (* Flatten before combining:  *)
                   |> Seq.fold_left (@) []
