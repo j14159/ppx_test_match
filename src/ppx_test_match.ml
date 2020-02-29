@@ -64,8 +64,12 @@ let rewrite_guard g rename_table =
   in
   (* Chain all guards together with `&&`.  *)
   let full_gs = (Option.to_list g) @ gs_by_var in
-    let guard_folder acc next =
-    let { pexp_loc = loc; _ } = next in
+  let guard_folder acc next =
+    (* We use the accumulator's location for the `&&` application so that a
+       user-supplied guard's location is preserved as the location for all
+       of them.
+     *)
+    let { pexp_loc = loc; _ } = acc in
     [%expr [%e acc] && [%e next]]
   in
 

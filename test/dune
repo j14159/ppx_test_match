@@ -1,5 +1,5 @@
 (tests
- (names test_assert test_rewrite)
+ (names test_usage test_rewrite)
  (libraries ounit2 ppxlib ppx_test_match)
  (preprocess (pps ppx_test_match))
 )
