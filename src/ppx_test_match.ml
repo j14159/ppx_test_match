@@ -83,7 +83,9 @@ let rewrite_patt p g =
   let rec rewrite_item = function
     | { ppat_desc = Ppat_tuple l ; _ } as patt ->
        { patt with ppat_desc = Ppat_tuple (List.map rewrite_item l) }
-    (* TODO:  recurse on records. *)
+    | { ppat_desc = Ppat_record (members, closed_flag); _ } as patt ->
+       let members2 = List.map (fun (m, p) -> (m, rewrite_item p)) members in
+       { patt with ppat_desc = Ppat_record (members2, closed_flag) }
     | { ppat_desc = Ppat_var ({ txt = label; loc }); _ } as pd ->
        begin
          match Hashtbl.find_opt tbl label with

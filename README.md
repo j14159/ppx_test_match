@@ -45,9 +45,15 @@ let some_other_ounit_test _ =
   [%test_match? (x, x)] t1;
   (* This will fail:  *)
   [%test_match? (x, x)] t2
+
+type some_other_rec = { a : int; b : string; c : int }
+
+let another_test _ =
+  (* This will pass:  *)
+  [%test_match? { a; c = a; _ }] { a = 1; b = "abc"; c = 1 }
 ```
 
-Only tuples support this rewriting at the moment but I expect to have at least records working shortly as well.
+Only tuples and records support this rewriting at the moment.
 
 # Rewriting Details
 When `test_match?` sees something like `(x, x)`, it will synthesize the following replacement:
