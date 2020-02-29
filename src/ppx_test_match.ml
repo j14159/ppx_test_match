@@ -81,6 +81,8 @@ let rewrite_patt p g =
   let tbl = Hashtbl.create 10 in
   (* Rewrites an individual element of a pattern.  *)
   let rec rewrite_item = function
+    | { ppat_desc = Ppat_tuple l ; _ } as patt ->
+       { patt with ppat_desc = Ppat_tuple (List.map rewrite_item l) }
     (* TODO:  recurse on records. *)
     | { ppat_desc = Ppat_var ({ txt = label; loc }); _ } as pd ->
        begin
@@ -103,19 +105,11 @@ let rewrite_patt p g =
             Hashtbl.add tbl label (new_seq, synth_ident :: rewritten_items);
             synth_var
        end
-    | { ppat_desc = Ppat_tuple _; _ } as item ->
-       rewrite item
     | other ->
        other
-
-  (* TODO:  duplicate basically of the above?  Simplify? *)
-  and rewrite = function
-    | { ppat_desc = Ppat_tuple l ; _ } as patt ->
-       { patt with ppat_desc = Ppat_tuple (List.map rewrite_item l) }
-    | other -> other
   in
 
-  let p2 = rewrite p in
+  let p2 = rewrite_item p in
   let g2 = rewrite_guard g tbl in
   p2, g2
 
