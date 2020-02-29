@@ -29,6 +29,15 @@ let test_failed_eq _ =
   assert_raises expected (fun _ -> [%test_match? {y; _} when y < 1.0] { x = 1; y = 2.0 });
   assert_raises expected (fun _ -> [%test_match? (x, x) when x > 5] (4, 4))
 
+type 'a test_variant = A of 'a
+
+let test_variants _ =
+  [%test_match? (A a) when a > 5] (A 6);
+  let m = [%test_match? (a, A a) when a > 1.2] in
+  m (2.0, A 2.0);
+  assert_raises (Failure "No match") (fun _ -> m (1.0, A 1.0));
+  assert_raises (Failure "No match") (fun _ -> m (5.0, A 5.1))
+
 let suite =
   "Basic tests checking that test_match functions as expected" >:::
     [ "Exact match" >:: test_exact
@@ -36,6 +45,7 @@ let suite =
     ; "Match equality in tuples" >:: test_match_eq_tuples
     ; "Match equality in records" >:: test_match_eq_records
     ; "Fail equality checks" >:: test_failed_eq
+    ; "Variants, including equality." >:: test_variants
     ]
 
 let _ = run_test_tt_main suite

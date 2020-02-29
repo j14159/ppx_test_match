@@ -86,6 +86,12 @@ let rewrite_patt p g =
     | { ppat_desc = Ppat_record (members, closed_flag); _ } as patt ->
        let members2 = List.map (fun (m, p) -> (m, rewrite_item p)) members in
        { patt with ppat_desc = Ppat_record (members2, closed_flag) }
+    | { ppat_desc = Ppat_variant (lbl, pat_opt); _ } as patt ->
+       let pat_opt2 = Option.map (fun p -> rewrite_item p) pat_opt in
+       { patt with ppat_desc = Ppat_variant (lbl, pat_opt2) }
+    | { ppat_desc = Ppat_construct (lident, pat_opt); _ } as patt ->
+       let pat_opt2 = Option.map (fun p -> rewrite_item p) pat_opt in
+       { patt with ppat_desc = Ppat_construct (lident, pat_opt2) }
     | { ppat_desc = Ppat_var ({ txt = label; loc }); _ } as pd ->
        begin
          match Hashtbl.find_opt tbl label with

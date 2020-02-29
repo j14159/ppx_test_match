@@ -33,6 +33,12 @@ let some_other_test_with_records =
   let example_rec = { x = "hello"; y = 3.14159 } in
   (* This will pass:  *)
   [%test_match? { x = "hello"; _ }] example_rec
+
+type a_variant = A of int
+
+let test_with_variant _ =
+  (* Will pass:  *)
+  [%test_match? (A a) when a > 4] (A 5)
 ```
 
 The PPX rewriter will also rewrite duplicated variables as an equality check, for example:
@@ -51,6 +57,14 @@ type some_other_rec = { a : int; b : string; c : int }
 let another_test _ =
   (* This will pass:  *)
   [%test_match? { a; c = a; _ }] { a = 1; b = "abc"; c = 1 }
+
+type a_variant = A of int
+
+let test_eq_with_variant _ =
+  (* Will pass:  *)
+  [%test_match? (a, A a)] (2, A 2)
+  (* Will fail:  *)
+  [%test_match? (a, A a) when a < 5] (6, A 6)
 ```
 
 Only tuples and records support this rewriting at the moment.
