@@ -67,7 +67,7 @@ let test_eq_with_variant _ =
   [%test_match? (a, A a) when a < 5] (6, A 6)
 ```
 
-Only tuples and records support this rewriting at the moment.
+Only tuples, records, and variants support this rewriting at the moment.
 
 # Rewriting Details
 When `test_match?` sees something like `(x, x)`, it will synthesize the following replacement:
