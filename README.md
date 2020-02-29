@@ -10,7 +10,7 @@ Please note that this project is released with a Contributor Code of Conduct, ve
 Add this preprocessing step to your `dune` file's library, executable, or test:
 
 ```
-(preprocess (pps ppx_test_match))
+(preprocess (pps ppx_test_match?))
 ```
 
 See `dune/test` for a more complete example or [the Dune documentation](https://dune.readthedocs.io/en/stable/concepts.html#preprocessing-spec).
@@ -21,18 +21,18 @@ This is still too early to be fully usable but the following are already possibl
 let some_ounit_test _ =
   let example_tuple = (2, 3) in
   (* This will pass:  *)
-  [%test_match (x, y) when y > x] example_tuple;
+  [%test_match? (x, y) when y > x] example_tuple;
   (* This will fail:  *)
-  [%test_match (x, y) when x > y] example_tuple;
+  [%test_match? (x, y) when x > y] example_tuple;
   (* This will pass:  *)
-  [%test_match (2, _)] example_tuple
+  [%test_match? (2, _)] example_tuple
 
 type some_rec = { x : string; y : float }
 
 let some_other_test_with_records =
   let example_rec = { x = "hello"; y = 3.14159 } in
   (* This will pass:  *)
-  [%test_match { x = "hello"; _ }] example_rec
+  [%test_match? { x = "hello"; _ }] example_rec
 ```
 
 The PPX rewriter will also rewrite duplicated variables as an equality check, for example:
@@ -42,15 +42,15 @@ let some_other_ounit_test _ =
   let t1 = (1.3, 1.3) in
   let t2 = (1.0, 1.01) in
   (* This will pass:  *)
-  [%test_match (x, x)] t1;
+  [%test_match? (x, x)] t1;
   (* This will fail:  *)
-  [%test_match (x, x)] t2
+  [%test_match? (x, x)] t2
 ```
 
 Only tuples support this rewriting at the moment but I expect to have at least records working shortly as well.
 
 # Rewriting Details
-When `test_match` sees something like `(x, x)`, it will synthesize the following replacement:
+When `test_match?` sees something like `(x, x)`, it will synthesize the following replacement:
 
 ```ocaml
 (x, _syn_0x) when x = _syn_0x
