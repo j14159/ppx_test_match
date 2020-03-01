@@ -49,10 +49,10 @@ let test_variants _ =
 
 let test_printer _ =
   assert_raises
-    (Failure "Failed to match (x, x):  (1, 2)")
+    (Failure "Failed to match (x, x) with value (1, 2)\n")
     (fun _ -> [%test_match? (x, x)] (1, 2) ~printer:[%derive.show:(int * int)]);
   assert_raises
-    (Failure "Failed to match (\"x\", y) when y > 2.4:  (\"x\", 2.39)")
+    (Failure "Failed to match (\"x\", y) when y > 2.4 with value (\"x\", 2.39)\n")
     (fun _ -> [%test_match? ("x", y) when y > 2.4]
                 ("x", 2.39)
                 ~printer:[%derive.show:(string * float)])

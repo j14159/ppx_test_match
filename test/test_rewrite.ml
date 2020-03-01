@@ -42,6 +42,9 @@ let loc_printer = function
   | { loc_start = ls; loc_end = le; loc_ghost = lg } ->
       "[" ^ (pos_printer ls) ^ " " ^ (pos_printer le) ^ " " ^ (string_of_bool lg) ^ "]"
 
+(** Convenience function for comparing locations.  *)
+let loc_equal = assert_equal ~printer:loc_printer
+
 (* Ensure that a simple 2-tuple pattern that checks for equality gets correctly
    rewritten as two different variables in a new pattern with a correct
    synthetic guard.  In this particular test case, we want `(x, x)` to be
@@ -54,20 +57,26 @@ let test_basic_tuple_eq_rewrite _ =
   let pat = Parse.pattern (Lexing.from_string text_pat) in
   let (rewritten, synth_guard_opt) = Ppx_test_match.rewrite_patt pat None in
   let expected = ppat_tuple
-                   ~loc:(location ~start:(no_file_pos 0 0) ~end_:(no_file_pos 0 6) ~ghost:false)
+                   ~loc:(one_line_loc 0 6)
                    [ ppat_var
-                       ~loc:(location ~start:(no_file_pos 0 1) ~end_:(no_file_pos 0 2) ~ghost:false)
+                       ~loc:(one_line_loc 1 2)
                        { txt = "x"
-                       ; loc = (location ~start:(no_file_pos 0 1) ~end_:(no_file_pos 0 2) ~ghost:false)
+                       ; loc = one_line_loc 1 2
                        }
                    ; ppat_var
-                       ~loc:(location ~start:(no_file_pos 0 4) ~end_:(no_file_pos 0 5) ~ghost:false)
+                       ~loc:(one_line_loc 4 5)
                        { txt = "_syn_0x"
-                       ; loc = (location ~start:(no_file_pos 0 4) ~end_:(no_file_pos 0 5) ~ghost:false)
+                       ; loc = one_line_loc 4 5
                        }
                    ]
   in
-  assert_equal expected rewritten ~printer:pat_printer;
+  assert_equal rewritten.ppat_loc expected.ppat_loc ~printer:loc_printer;
+  assert_equal ~msg:"Pattern attributes" expected.ppat_attributes rewritten.ppat_attributes;
+  (* TODO:  it /seems/ something changed between ppxlib 0.8.1 and 0.12.0 where
+     this wasn't previously populated for the parsed value leading to
+     `rewritten`.  Bears later investigation.
+   *)
+  assert_equal expected { rewritten with ppat_loc_stack = [] } ~printer:pat_printer;
   assert_bool "Synthetic guard exists." (Option.is_some synth_guard_opt);
   let synth_guard = Option.get synth_guard_opt in
   let loc = one_line_loc 1 2 in
@@ -91,9 +100,6 @@ let test_basic_tuple_eq_rewrite _ =
                          ]
   in
   assert_equal expected_guard synth_guard ~printer:exp_printer
-
-(** Convenience function for comparing locations.  *)
-let loc_equal = assert_equal ~printer:loc_printer
 
 (* Check that the synthesized guard is added to the user-supplied one, rather than
    overwriting it.

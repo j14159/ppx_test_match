@@ -123,9 +123,20 @@ let rewrite_patt p g =
 
 let fail_msg pat guard =
   let f = Format.str_formatter in
-  Format.fprintf f "Failed to match ";
+  Format.pp_open_box f 0;
+  Format.fprintf f "Failed to match";
+  Format.pp_print_space f ();
   Pprintast.pattern f pat;
-  let _ = Option.map (fun g -> Format.fprintf f " when "; Pprintast.expression f g) guard in
+  let _ = Option.map
+            (fun g ->
+              Format.pp_print_space f ();
+              Format.fprintf f "when";
+              Format.pp_print_space f ();
+              Pprintast.expression f g
+            )
+            guard
+  in
+  Format.pp_close_box f ();
   Format.flush_str_formatter ()
 
 let test_match_ext =
@@ -147,11 +158,50 @@ let test_match_ext =
           | _failed ->
              let full_msg = Option.fold
                               ~none:[%e msg]
-                              ~some:(fun p -> [%e msg] ^ ":  " ^ (p _failed))
+                              ~some:(fun p ->
+                                let f = Format.str_formatter in
+                                Format.pp_open_box f 0;
+                                Format.fprintf f "@[%s@ with value@ %s@]\n" [%e msg] (p _failed);
+                                Format.flush_str_formatter ()
+                              )
                               printer
              in
              failwith full_msg
       ])
 
+(* TODO:  this is pretty brutal duplication.  Need to collapse this.  *)
+let ounit_test_match_ext =
+  Extension.declare
+    "ppx_assert_match.ounit_match"
+    Extension.Context.Expression
+    Ast_pattern.(ppat __ __)
+    (fun ~loc ~path:_ patt guard ->
+      let open Ast_builder.Default in
+      let rewritten_patt, rewritten_guard = rewrite_patt patt guard in
+      let msg = pexp_constant ~loc (Pconst_string (fail_msg patt guard, None)) in
+      (* To simplify pattern construction below we need to always have _some_
+         guard expression because I'm using Metaquot.
+       *)
+      let g = Option.value rewritten_guard ~default:[%expr true] in
+      [%expr fun ?printer v ->
+          match v with
+          | [%p rewritten_patt] when [%e g] -> ()
+          | _failed ->
+             let full_msg = Option.fold
+                              ~none:[%e msg]
+                              ~some:(fun p ->
+                                let f = Format.str_formatter in
+                                Format.pp_open_box f 0;
+                                Format.fprintf f "@[%s@ eith value:@ %s@]\n" [%e msg] (p _failed);
+                                Format.flush_str_formatter ()
+                              )
+                              printer
+             in
+             let open OUnitTest in
+             raise (OUnit_failure full_msg)
+      ])
+
 let _ =
-  Driver.register_transformation ~extensions:[test_match_ext] "ppx_test_match"
+  Driver.register_transformation
+    ~extensions:[test_match_ext; ounit_test_match_ext]
+    "ppx_test_match"
