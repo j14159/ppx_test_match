@@ -1,5 +1,5 @@
 (tests
  (names test_usage test_rewrite)
- (libraries ounit2 ppxlib ppx_test_match)
- (preprocess (pps ppx_test_match))
+ (libraries ounit2 ppxlib ppx_test_match ppx_deriving.show)
+ (preprocess (pps ppx_test_match ppx_deriving.show))
 )

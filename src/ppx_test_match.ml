@@ -137,14 +137,21 @@ let test_match_ext =
       let open Ast_builder.Default in
       let rewritten_patt, rewritten_guard = rewrite_patt patt guard in
       let msg = pexp_constant ~loc (Pconst_string (fail_msg patt guard, None)) in
-      let main_case = case ~lhs:rewritten_patt ~guard:rewritten_guard ~rhs:(eunit ~loc) in
-      let fail_case = case
-                        ~lhs:(ppat_any ~loc)
-                        ~guard:(None)
-                        ~rhs:([%expr failwith [%e msg]])
-      in
-      pexp_function ~loc [ main_case; fail_case ]
-    )
+      (* To simplify pattern construction below we need to always have _some_
+         guard expression because I'm using Metaquot.
+       *)
+      let g = Option.value rewritten_guard ~default:[%expr true] in
+      [%expr fun ?printer v ->
+          match v with
+          | [%p rewritten_patt] when [%e g] -> ()
+          | _failed ->
+             let full_msg = Option.fold
+                              ~none:[%e msg]
+                              ~some:(fun p -> [%e msg] ^ ":  " ^ (p _failed))
+                              printer
+             in
+             failwith full_msg
+      ])
 
 let _ =
   Driver.register_transformation ~extensions:[test_match_ext] "ppx_test_match"

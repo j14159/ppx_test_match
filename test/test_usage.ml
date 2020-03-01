@@ -47,6 +47,16 @@ let test_variants _ =
   assert_raises expected (fun _ -> m (1.0, A 1.0));
   assert_raises expected (fun _ -> m (5.0, A 5.1))
 
+let test_printer _ =
+  assert_raises
+    (Failure "Failed to match (x, x):  (1, 2)")
+    (fun _ -> [%test_match? (x, x)] (1, 2) ~printer:[%derive.show:(int * int)]);
+  assert_raises
+    (Failure "Failed to match (\"x\", y) when y > 2.4:  (\"x\", 2.39)")
+    (fun _ -> [%test_match? ("x", y) when y > 2.4]
+                ("x", 2.39)
+                ~printer:[%derive.show:(string * float)])
+
 let suite =
   "Basic tests checking that test_match functions as expected" >:::
     [ "Exact match" >:: test_exact
@@ -55,6 +65,7 @@ let suite =
     ; "Match equality in records" >:: test_match_eq_records
     ; "Fail equality checks" >:: test_failed_eq
     ; "Variants, including equality." >:: test_variants
+    ; "Using printer argument" >:: test_printer
     ]
 
 let _ = run_test_tt_main suite
