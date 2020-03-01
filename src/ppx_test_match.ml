@@ -121,11 +121,12 @@ let rewrite_patt p g =
   let g2 = rewrite_guard g tbl in
   p2, g2
 
-let fail_msg pat _guard =
+let fail_msg pat guard =
   let f = Format.str_formatter in
-  let s_pat = Pprintast.pattern f pat; Format.flush_str_formatter () in
-
-  "No match:  " ^ s_pat
+  Format.fprintf f "Failed to match ";
+  Pprintast.pattern f pat;
+  let _ = Option.map (fun g -> Format.fprintf f " when "; Pprintast.expression f g) guard in
+  Format.flush_str_formatter ()
 
 let test_match_ext =
   Extension.declare
@@ -135,11 +136,12 @@ let test_match_ext =
     (fun ~loc ~path:_ patt guard ->
       let open Ast_builder.Default in
       let rewritten_patt, rewritten_guard = rewrite_patt patt guard in
+      let msg = pexp_constant ~loc (Pconst_string (fail_msg patt guard, None)) in
       let main_case = case ~lhs:rewritten_patt ~guard:rewritten_guard ~rhs:(eunit ~loc) in
       let fail_case = case
                         ~lhs:(ppat_any ~loc)
                         ~guard:(None)
-                        ~rhs:([%expr failwith "No match" ])
+                        ~rhs:([%expr failwith [%e msg]])
       in
       pexp_function ~loc [ main_case; fail_case ]
     )

@@ -24,10 +24,18 @@ let test_match_eq_records _ =
   [%test_match? { a; c = a; _ }] { a = 1; b = "abc"; c = 1 }
 
 let test_failed_eq _ =
-  let expected = Failure "No match" in
-  assert_raises expected (fun _ -> [%test_match? (x, x)] (1, 2));
-  assert_raises expected (fun _ -> [%test_match? {y; _} when y < 1.0] { x = 1; y = 2.0 });
-  assert_raises expected (fun _ -> [%test_match? (x, x) when x > 5] (4, 4))
+  assert_raises
+    (Failure "Failed to match (x, x)")
+    (fun _ -> [%test_match? (x, x)] (1, 2));
+  assert_raises
+    (* Formatting seems a bit odd but I won't argue with ppxlib's pretty
+       printer for now.
+     *)
+    (Failure "Failed to match { y;_} when y < 1.0")
+    (fun _ -> [%test_match? {y; _} when y < 1.0] { x = 1; y = 2.0 });
+  assert_raises
+    (Failure "Failed to match (x, x) when x > 5")
+    (fun _ -> [%test_match? (x, x) when x > 5] (4, 4))
 
 type 'a test_variant = A of 'a
 
@@ -35,8 +43,9 @@ let test_variants _ =
   [%test_match? (A a) when a > 5] (A 6);
   let m = [%test_match? (a, A a) when a > 1.2] in
   m (2.0, A 2.0);
-  assert_raises (Failure "No match") (fun _ -> m (1.0, A 1.0));
-  assert_raises (Failure "No match") (fun _ -> m (5.0, A 5.1))
+  let expected = Failure "Failed to match (a, A a) when a > 1.2" in
+  assert_raises expected (fun _ -> m (1.0, A 1.0));
+  assert_raises expected (fun _ -> m (5.0, A 5.1))
 
 let suite =
   "Basic tests checking that test_match functions as expected" >:::
