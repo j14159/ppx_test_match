@@ -1,5 +1,6 @@
 (library
  (name ppx_test_match)
+ (public_name ppx_test_match)
  (kind ppx_rewriter)
  (libraries ppxlib)
  (preprocess (pps ppxlib.metaquot))
