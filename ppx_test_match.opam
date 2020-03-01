@@ -1,0 +1,21 @@
+opam-version: "2.0"
+maintainer: "Jeremy Pierre j.14159@gmail.com"
+authors: "Jeremy Pierre j.14159@gmail.com"
+homepage: "https://github.com/j14159/ppx_test_match"
+bug-reports: "https://github.com/j14159/ppx_test_match/issues"
+dev-repo: "git+https://github.com/j14159/ppx_test_match.git"
+doc: "https://github.com/j14159/ppx_test_match"
+license: "MIT"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "ocaml"     {>= "4.08.1"}
+  "dune"      {>= "2.0.0"}
+  "ppxlib"    {>= "0.12.0"}
+]
+synopsis: "Test extension to simplify testing pattern matches"
+description: "
+Based on Erlang/EUnit's assertMatch macro, this provides single-line pattern
+match testing, e.g. [%test_match? (x, x)] (1, 1)
+"
