@@ -121,6 +121,7 @@ let rewrite_patt p g =
   let g2 = rewrite_guard g tbl in
   p2, g2
 
+(* Format a match-failure message using the pattern and optional guard.  *)
 let fail_msg pat guard =
   let f = Format.str_formatter in
   Format.pp_open_box f 0;
@@ -169,7 +170,13 @@ let test_match_ext =
              failwith full_msg
       ])
 
-(* TODO:  this is pretty brutal duplication.  Need to collapse this.  *)
+(* TODO:  this is pretty brutal duplication.  Need to collapse this.
+
+   I introduced this for some better output when using test_match with OUnit but
+   this could _probably_ be much better generalized.  I dabbled briefly but had
+   some trouble closing over a general exception-raising function.  Will revisit
+   soon.
+ *)
 let ounit_test_match_ext =
   Extension.declare
     "ppx_assert_match.ounit_match"
