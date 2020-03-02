@@ -69,6 +69,18 @@ let test_eq_with_variant _ =
 
 Only tuples, records, and variants support this rewriting at the moment.
 
+## Printer Argument
+You can optionally supply a `printer` argument to `test_match` that will be used to format a non-matching expression on failure.  An example using [ppx_deriving](https://github.com/ocaml-ppx/ppx_deriving) to generate the printer:
+
+```ocaml
+let test_with_printer _ =
+  (* This will fail with the following message in a `Failure` exception:
+
+       Failed to match (x, x) with value (1, 2)
+   *)
+  [%test_match? (x, x)] (1, 2) ~printer:[derive.show: (int * int)]
+```
+
 # Rewriting Details
 When `test_match?` sees something like `(x, x)`, it will synthesize the following replacement:
 
