@@ -192,7 +192,7 @@ let ounit_test_match_ext =
                               ~some:(fun p ->
                                 let f = Format.str_formatter in
                                 Format.pp_open_box f 0;
-                                Format.fprintf f "@[%s@ eith value:@ %s@]\n" [%e msg] (p _failed);
+                                Format.fprintf f "@[%s@ with value:@ %s@]\n" [%e msg] (p _failed);
                                 Format.flush_str_formatter ()
                               )
                               printer
